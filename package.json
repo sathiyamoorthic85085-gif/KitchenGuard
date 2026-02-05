@@ -1,12 +1,21 @@
 {
   "name": "kitchenguard",
-  "version": "1.0.0",
-  "description": "Smart Kitchen Safety Monitoring System",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "echo 'Build already complete in dist/client'",
-    "start": "echo 'Static site - ready to deploy'"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "terser": "^5.46.0",
+    "vite": "^5.0.8"
+  }
 }
