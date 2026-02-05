@@ -1,4 +1,10 @@
 {
   "buildCommand": "echo 'Production build ready'",
-  "outputDirectory": "dist/client"
+  "outputDirectory": "dist/client",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
