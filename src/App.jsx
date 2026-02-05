@@ -20,9 +20,9 @@ function App() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         setSession(session)
+        setLoading(false)
       } catch (error) {
         console.error('Session check error:', error)
-      } finally {
         setLoading(false)
       }
     }
@@ -32,11 +32,6 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session)
-        setLoading(false)
-        // Redirect to home on login
-        if (event === 'SIGNED_IN') {
-          window.location.href = '/'
-        }
       }
     )
 

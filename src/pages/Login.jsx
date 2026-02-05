@@ -1,38 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    // Listen for auth state change and redirect on login
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          window.location.href = '/'
-        }
-      }
-    )
-    return () => subscription?.unsubscribe()
-  }, [])
-
   const handleGoogleLogin = async () => {
     try {
       setLoading(true)
       setError(null)
-      const redirectUrl = `${window.location.origin}/`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/`,
         },
       })
       if (error) throw error
     } catch (error) {
       setError(error.message)
       console.error('Login error:', error)
-    } finally {
       setLoading(false)
     }
   }
