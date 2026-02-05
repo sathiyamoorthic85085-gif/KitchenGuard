@@ -40,7 +40,9 @@ function App() {
   }, [])
 
   // Check if we're in auth callback
-  const isAuthCallback = window.location.hash.includes('access_token') || window.location.hash.includes('code')
+  const isAuthCallback = window.location.pathname === '/auth/callback' || 
+                        window.location.hash.includes('access_token') || 
+                        window.location.hash.includes('code')
 
   if (loading) {
     return (
