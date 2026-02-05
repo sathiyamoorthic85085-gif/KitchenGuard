@@ -67,7 +67,27 @@ function App() {
           <h1 onClick={() => setCurrentPage('dashboard')} style={{ cursor: 'pointer' }}>
             🍳 KitchenGuard
           </h1>
-          <span className="user-email">{session?.user?.email}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="user-email">{session?.user?.email}</span>
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut()
+                setSession(null)
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <nav className="app-nav">
