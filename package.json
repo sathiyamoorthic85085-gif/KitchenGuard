@@ -1,0 +1,12 @@
+{
+  "name": "kitchenguard",
+  "version": "1.0.0",
+  "description": "Smart Kitchen Safety Monitoring System",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Build already complete in dist/client'",
+    "start": "echo 'Static site - ready to deploy'"
+  },
+  "dependencies": {}
+}
