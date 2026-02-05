@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import { DeviceProvider } from './hooks/useDevice'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Control from './pages/Control'
+import Alerts from './pages/Alerts'
+import Family from './pages/Family'
+import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 import './App.css'
 
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState('dashboard')
 
   useEffect(() => {
-    // Check current session
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
@@ -23,7 +29,6 @@ function App() {
 
     checkSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session)
@@ -42,7 +47,74 @@ function App() {
     )
   }
 
-  return session ? <Dashboard session={session} /> : <Login />
+  if (!session) return <Login />
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'control': return <Control />
+      case 'alerts': return <Alerts />
+      case 'family': return <Family />
+      case 'profile': return <Profile />
+      case 'settings': return <Settings />
+      default: return <Dashboard session={session} />
+    }
+  }
+
+  return (
+    <DeviceProvider>
+      <div className="app-layout">
+        <header className="app-header">
+          <h1 onClick={() => setCurrentPage('dashboard')} style={{ cursor: 'pointer' }}>
+            🍳 KitchenGuard
+          </h1>
+          <span className="user-email">{session?.user?.email}</span>
+        </header>
+
+        <nav className="app-nav">
+          <button 
+            className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('dashboard')}
+          >
+            📊 Home
+          </button>
+          <button 
+            className={`nav-btn ${currentPage === 'control' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('control')}
+          >
+            🎮 Control
+          </button>
+          <button 
+            className={`nav-btn ${currentPage === 'alerts' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('alerts')}
+          >
+            🚨 Alerts
+          </button>
+          <button 
+            className={`nav-btn ${currentPage === 'family' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('family')}
+          >
+            👨‍👩‍👧‍👦 Family
+          </button>
+          <button 
+            className={`nav-btn ${currentPage === 'profile' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('profile')}
+          >
+            👤 Profile
+          </button>
+          <button 
+            className={`nav-btn ${currentPage === 'settings' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('settings')}
+          >
+            ⚙️ Settings
+          </button>
+        </nav>
+
+        <main className="app-content">
+          {renderPage()}
+        </main>
+      </div>
+    </DeviceProvider>
+  )
 }
 
 export default App
