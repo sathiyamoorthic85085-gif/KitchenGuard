@@ -9,10 +9,16 @@ export default function Login() {
     try {
       setLoading(true)
       setError(null)
+      
+      // Use Supabase callback URL for OAuth redirect
+      const callbackUrl = window.location.origin.includes('localhost')
+        ? `${window.location.origin}/auth/callback`
+        : `https://kitchen-guard-ten.vercel.app/auth/callback`
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: callbackUrl,
         },
       })
       if (error) throw error

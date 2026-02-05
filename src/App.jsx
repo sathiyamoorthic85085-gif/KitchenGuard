@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { DeviceProvider } from './hooks/useDevice'
 import Login from './pages/Login'
+import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import Control from './pages/Control'
 import Alerts from './pages/Alerts'
@@ -38,6 +39,9 @@ function App() {
     return () => subscription?.unsubscribe()
   }, [])
 
+  // Check if we're in auth callback
+  const isAuthCallback = window.location.hash.includes('access_token') || window.location.hash.includes('code')
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -45,6 +49,10 @@ function App() {
         <p>Loading...</p>
       </div>
     )
+  }
+
+  if (isAuthCallback) {
+    return <AuthCallback />
   }
 
   if (!session) return <Login />
