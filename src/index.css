@@ -1,0 +1,149 @@
+:root {
+  /* Figma Premium Palette */
+  --bg-dark: #0B0E14;
+  /* Deep Navy/Black */
+  --bg-card: #151A23;
+  /* Slightly Lighter Navy */
+  --bg-hover: #1E293B;
+  /* Hover State */
+
+  --primary: #BB86FC;
+  /* Violet */
+  --primary-glow: rgba(187, 134, 252, 0.3);
+
+  --secondary: #00F2FF;
+  /* Electric Cyan */
+  --secondary-glow: rgba(0, 242, 255, 0.3);
+
+  --accent: #FF0055;
+  /* Neon Pink (for alerts) */
+  --accent-glow: rgba(255, 0, 85, 0.3);
+
+  --border: #1E293B;
+  /* Subtle Border */
+  --border-glow: rgba(255, 255, 255, 0.1);
+
+  /* Status Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Typography */
+  --text-main: #FFFFFF;
+  --text-muted: #94A3B8;
+  /* Slate 400 */
+  --text-dim: #64748B;
+  /* Slate 500 */
+
+  /* Spacing & Radius */
+  --radius-xl: 24px;
+  /* Highly Rounded */
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 20px rgba(187, 134, 252, 0.15);
+  /* Subtle Violet Glow */
+
+  --font-sans: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background-color: var(--bg-dark) !important;
+  color: var(--text-main) !important;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: var(--bg-dark) !important;
+  color: var(--text-main);
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(187, 134, 252, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.08) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

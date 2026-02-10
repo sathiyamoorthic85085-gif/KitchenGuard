@@ -9,16 +9,22 @@ export default function Login() {
     try {
       setLoading(true)
       setError(null)
-      
-      // Use Supabase callback URL for OAuth redirect
-      const callbackUrl = window.location.origin.includes('localhost')
-        ? `${window.location.origin}/auth/callback`
-        : `https://kitchen-guard-ten.vercel.app/auth/callback`
-      
+
+      const origin = window.location.origin
+      // Ensure we don't have double slashes if origin has one
+      const callbackPath = '/auth/callback'
+      const redirectTo = `${origin}${callbackPath}`
+
+      console.log('Login attempt with redirectTo:', redirectTo)
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: callbackUrl,
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       })
       if (error) throw error
@@ -30,19 +36,35 @@ export default function Login() {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-box">
+    <div className="login-page">
+      <div className="login-card">
         <h1>🍳 KitchenGuard</h1>
-        <p>Smart Kitchen Safety System</p>
-        
-        {error && <div className="error-message">{error}</div>}
-        
-        <button 
-          onClick={handleGoogleLogin} 
+        <p>Premium Smart Kitchen Safety</p>
+
+        {error && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.2)',
+            color: '#fca5a5',
+            padding: '1rem',
+            borderRadius: '0.75rem',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            marginBottom: '2rem',
+            fontSize: '0.9rem'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleGoogleLogin}
           disabled={loading}
-          className="google-btn"
+          className="btn-google"
         >
-          {loading ? 'Signing in...' : '🔐 Sign in with Google'}
+          {loading ? 'Connecting...' : (
+            <>
+              <span style={{ fontSize: '1.25rem' }}>🔐</span> Sign in with Google
+            </>
+          )}
         </button>
       </div>
     </div>

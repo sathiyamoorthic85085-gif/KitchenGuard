@@ -6,11 +6,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
     rollupOptions: {
-      output: {
-        manualChunks: undefined,
-      },
-    },
+      external: [/^src\/api\/.*/, /^src\/app2\/.*/]
+    }
   },
 })

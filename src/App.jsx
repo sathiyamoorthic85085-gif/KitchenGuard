@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { DeviceProvider } from './hooks/useDevice'
+import { ToastProvider } from './hooks/useToast'
+import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
@@ -21,9 +23,9 @@ function App() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         setSession(session)
-        setLoading(false)
       } catch (error) {
         console.error('Session check error:', error)
+      } finally {
         setLoading(false)
       }
     }
@@ -32,7 +34,9 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Global auth state change:', event)
         setSession(session)
+        if (event === 'SIGNED_IN') setLoading(false)
       }
     )
 
@@ -40,11 +44,11 @@ function App() {
   }, [])
 
   // Check if we're in auth callback
-  const isAuthCallback = window.location.pathname === '/auth/callback' || 
-                        window.location.hash.includes('access_token') || 
-                        window.location.hash.includes('code')
+  const isAuthCallback = window.location.pathname === '/auth/callback' ||
+    window.location.hash.includes('access_token=') ||
+    window.location.search.includes('code=')
 
-  if (loading) {
+  if (loading && !isAuthCallback) {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
@@ -71,80 +75,87 @@ function App() {
   }
 
   return (
-    <DeviceProvider>
-      <div className="app-layout">
-        <header className="app-header">
-          <h1 onClick={() => setCurrentPage('dashboard')} style={{ cursor: 'pointer' }}>
-            🍳 KitchenGuard
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="user-email">{session?.user?.email}</span>
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut()
-                setSession(null)
-              }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}
-            >
-              Logout
-            </button>
+    <ErrorBoundary>
+      <ToastProvider>
+        <DeviceProvider>
+          <div className="app-layout">
+            <aside className="app-sidebar">
+              <div className="sidebar-header">
+                <h1 onClick={() => setCurrentPage('dashboard')}>
+                  🍳 KitchenGuard
+                </h1>
+              </div>
+
+              <nav className="app-nav">
+                <button
+                  className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('dashboard')}
+                >
+                  <span className="icon">📊</span> Dashboard
+                </button>
+                <button
+                  className={`nav-btn ${currentPage === 'control' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('control')}
+                >
+                  <span className="icon">🎮</span> Control
+                </button>
+                <button
+                  className={`nav-btn ${currentPage === 'alerts' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('alerts')}
+                >
+                  <span className="icon">🚨</span> Alerts
+                </button>
+                <button
+                  className={`nav-btn ${currentPage === 'family' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('family')}
+                >
+                  <span className="icon">👨‍👩‍👧‍👦</span> Family
+                </button>
+                <button
+                  className={`nav-btn ${currentPage === 'profile' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('profile')}
+                >
+                  <span className="icon">👤</span> Profile
+                </button>
+                <button
+                  className={`nav-btn ${currentPage === 'settings' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('settings')}
+                >
+                  <span className="icon">⚙️</span> Settings
+                </button>
+              </nav>
+
+              <div className="user-profile">
+                <div className="user-info" title={session?.user?.email}>
+                  {session?.user?.email}
+                </div>
+                <button
+                  className="logout-icon-btn"
+                  onClick={async () => {
+                    await supabase.auth.signOut()
+                    setSession(null)
+                  }}
+                  title="Logout"
+                >
+                  🚪
+                </button>
+              </div>
+            </aside>
+
+            <main className="main-content">
+              <div className="page-header">
+                <h2>
+                  {currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}
+                </h2>
+              </div>
+              {renderPage()}
+            </main>
           </div>
-        </header>
-
-        <nav className="app-nav">
-          <button 
-            className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('dashboard')}
-          >
-            📊 Home
-          </button>
-          <button 
-            className={`nav-btn ${currentPage === 'control' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('control')}
-          >
-            🎮 Control
-          </button>
-          <button 
-            className={`nav-btn ${currentPage === 'alerts' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('alerts')}
-          >
-            🚨 Alerts
-          </button>
-          <button 
-            className={`nav-btn ${currentPage === 'family' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('family')}
-          >
-            👨‍👩‍👧‍👦 Family
-          </button>
-          <button 
-            className={`nav-btn ${currentPage === 'profile' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('profile')}
-          >
-            👤 Profile
-          </button>
-          <button 
-            className={`nav-btn ${currentPage === 'settings' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('settings')}
-          >
-            ⚙️ Settings
-          </button>
-        </nav>
-
-        <main className="app-content">
-          {renderPage()}
-        </main>
-      </div>
-    </DeviceProvider>
+        </DeviceProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   )
 }
 
 export default App
+
