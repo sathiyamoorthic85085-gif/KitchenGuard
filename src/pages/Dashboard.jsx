@@ -1,86 +1,85 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useDevice } from '../hooks/useDevice'
+import { useAdaptiveWeather } from '../hooks/useAdaptiveWeather'
+
+const sensorMeta = [
+  { key: 'fire', title: 'Fire Sensor', icon: '🔥', image: 'https://images.unsplash.com/photo-1520880867055-1e30d1cb001c?auto=format&fit=crop&w=600&q=80' },
+  { key: 'gas', title: 'Gas Sensor', icon: '💨', image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=600&q=80' },
+  { key: 'temp', title: 'Temperature Sensor', icon: '🌡️', image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80' }
+]
 
 export default function Dashboard({ session }) {
   const [loading, setLoading] = useState(false)
+  const { metrics } = useDevice()
+  const { city, setCity, weather, analysis, supportedCities, refreshWeather } = useAdaptiveWeather(metrics.temp)
 
   const handleLogout = async () => {
     try {
       setLoading(true)
       await supabase.auth.signOut()
-    } catch (error) {
-      console.error('Logout error:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const sensorValue = {
+    fire: metrics.fire > 0.5 ? 'Detected' : 'Safe',
+    gas: `${metrics.gas.toFixed(1)} ppm`,
+    temp: `${metrics.temp.toFixed(1)}°C`
+  }
+
   return (
-    <div className="dashboard-container">
-      <header className="header">
-        <h1>🍳 KitchenGuard</h1>
-        <div className="user-info">
-          <span>{session?.user?.email}</span>
-          <button onClick={handleLogout} disabled={loading} className="logout-btn">
-            {loading ? 'Signing out...' : 'Sign Out'}
-          </button>
+    <div className="page-container mobile-app">
+      <header className="top-hero">
+        <div>
+          <h2>KitchenGuard Mobile</h2>
+          <p>Welcome {session?.user?.user_metadata?.name || session?.user?.email}</p>
         </div>
+        <button onClick={handleLogout} disabled={loading} className="btn-secondary">
+          {loading ? 'Signing out...' : 'Sign Out'}
+        </button>
       </header>
 
-      <main className="dashboard-main">
-        <div className="welcome-section">
-          <h2>Welcome, {session?.user?.user_metadata?.name || session?.user?.email}! 👋</h2>
-          <p>Your smart kitchen safety system is active and monitoring.</p>
-        </div>
+      <section className="cards-grid">
+        {sensorMeta.map(sensor => (
+          <article key={sensor.key} className="sensor-rich-card">
+            <img src={sensor.image} alt={sensor.title} />
+            <div className="overlay">
+              <h3>{sensor.icon} {sensor.title}</h3>
+              <strong>{sensorValue[sensor.key]}</strong>
+              <span>Live monitoring active</span>
+            </div>
+          </article>
+        ))}
+      </section>
 
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🔥</div>
-            <h3>Fire Detection</h3>
-            <p>Real-time monitoring</p>
-            <span className="status active">● Active</span>
-          </div>
+      <section className="status-grid">
+        <div className="status-tile"><span>ESP32</span><b>🟢 Online</b></div>
+        <div className="status-tile"><span>ESP32-CAM</span><b>🟢 Streaming</b></div>
+        <div className="status-tile"><span>Automation</span><b>✅ Active</b></div>
+      </section>
 
-          <div className="feature-card">
-            <div className="feature-icon">💨</div>
-            <h3>Gas Detection</h3>
-            <p>Continuous monitoring</p>
-            <span className="status active">● Active</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">🌡️</div>
-            <h3>Temperature</h3>
-            <p>Real-time tracking</p>
-            <span className="status active">● Active</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">🔔</div>
-            <h3>Alerts</h3>
-            <p>Instant notifications</p>
-            <span className="status active">● Active</span>
+      <section className="weather-panel">
+        <div className="weather-header">
+          <h3>🇮🇳 Real-time India Weather AI</h3>
+          <div className="weather-actions">
+            <select value={city} onChange={(e) => setCity(e.target.value)} className="form-select">
+              {supportedCities.map(name => <option key={name}>{name}</option>)}
+            </select>
+            <button className="btn-secondary" onClick={refreshWeather} disabled={weather.loading}>
+              {weather.loading ? 'Refreshing...' : 'Refresh'}
+            </button>
           </div>
         </div>
 
-        <div className="status-section">
-          <h3>System Status</h3>
-          <div className="status-grid">
-            <div className="status-item">
-              <span>ESP32 Device:</span>
-              <span className="status-value online">🟢 Online</span>
-            </div>
-            <div className="status-item">
-              <span>Cloud Sync:</span>
-              <span className="status-value online">🟢 Connected</span>
-            </div>
-            <div className="status-item">
-              <span>Last Update:</span>
-              <span className="status-value">{new Date().toLocaleTimeString()}</span>
-            </div>
-          </div>
-        </div>
-      </main>
+        <p>Outside: <b>{weather.outsideTemp}°C</b> ({weather.condition}) | Inside: <b>{metrics.temp.toFixed(1)}°C</b></p>
+        <p>Season: <b>{analysis.season}</b> · Risk: <b>{analysis.risk}</b></p>
+        <p className="text-muted">{analysis.aiMessage}</p>
+        <p className="text-muted">{analysis.note}</p>
+        <p className="text-muted">Source: {weather.source} {weather.updatedAt ? `· Updated ${new Date(weather.updatedAt).toLocaleTimeString()}` : ''}</p>
+        {weather.error && <p className="error-message">{weather.error}</p>}
+      </section>
     </div>
   )
 }

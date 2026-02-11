@@ -1,73 +1,85 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useDevice } from '../hooks/useDevice'
+import { useAdaptiveWeather } from '../hooks/useAdaptiveWeather'
 
 export default function Control() {
   const { metrics, updateDevice } = useDevice()
-  const [fanOn, setFanOn] = useState(false)
-  const [alarmOn, setAlarmOn] = useState(false)
+  const [fanOn, setFanOn] = useState(true)
+  const [regulator, setRegulator] = useState(65)
+  const [gasThreshold, setGasThreshold] = useState(50)
+  const [tempThreshold, setTempThreshold] = useState(55)
+  const [cameraIp, setCameraIp] = useState('192.168.1.24:81/stream')
+  const [cameraError, setCameraError] = useState(false)
+  const { analysis } = useAdaptiveWeather(metrics.temp)
 
-  const handleFanToggle = async () => {
-    const newState = !fanOn
-    setFanOn(newState)
-    await updateDevice('fan', { state: newState })
+  const automationTriggered = useMemo(
+    () => metrics.gas > gasThreshold || metrics.temp > tempThreshold || metrics.fire > 0.5,
+    [metrics, gasThreshold, tempThreshold]
+  )
+
+  const cameraFeedUrl = cameraIp ? `http://${cameraIp}` : ''
+
+  const toggleFan = async () => {
+    const next = !fanOn
+    setFanOn(next)
+    await updateDevice('fan', { state: next, regulator })
   }
 
-  const handleAlarmToggle = async () => {
-    const newState = !alarmOn
-    setAlarmOn(newState)
-    await updateDevice('alarm', { state: newState })
+  const applyAiThresholds = () => {
+    setGasThreshold(analysis.recommended.gasThreshold)
+    setTempThreshold(analysis.recommended.tempThreshold)
   }
-
-  const getFireStatus = () => metrics.fire > 0.5 ? 'ALERT' : 'Normal'
-  const getGasStatus = () => metrics.gas > 50 ? 'ALERT' : metrics.gas > 25 ? 'Warning' : 'Normal'
 
   return (
     <div className="page-container">
-      <h2>🎮 Device Control</h2>
+      <h2>🎛️ Control Dashboard</h2>
 
-      <div className="metrics-grid">
-        <div className={`metric-card ${getFireStatus().toLowerCase()}`}>
-          <div className="metric-icon">🔥</div>
-          <h3>Fire Detection</h3>
-          <p className="metric-value">{metrics.fire > 0.5 ? 'DETECTED' : 'Safe'}</p>
-          <span className={`status ${getFireStatus().toLowerCase()}`}>● {getFireStatus()}</span>
+      <div className="panel-grid">
+        <div className="settings-group">
+          <h3>ESP32-CAM Feed & Child Detection</h3>
+          <p className="text-muted">IP Connection</p>
+          <input
+            value={cameraIp}
+            onChange={(e) => {
+              setCameraIp(e.target.value)
+              setCameraError(false)
+            }}
+            placeholder="192.168.1.24:81/stream"
+            className="form-input"
+          />
+          <div className="camera-preview">
+            {cameraFeedUrl && !cameraError ? (
+              <img
+                className="camera-feed"
+                src={cameraFeedUrl}
+                alt="ESP32 Camera feed"
+                onError={() => setCameraError(true)}
+              />
+            ) : (
+              <p>👶 Child detection stream preview unavailable. Check the IP and network.</p>
+            )}
+          </div>
+          <p className="text-muted">Status: Camera {cameraFeedUrl && !cameraError ? '🟢 Connected' : '⚫ Waiting'} · ESP32 🟢 Online</p>
         </div>
 
-        <div className={`metric-card ${getGasStatus().toLowerCase()}`}>
-          <div className="metric-icon">💨</div>
-          <h3>Gas Level</h3>
-          <p className="metric-value">{metrics.gas.toFixed(1)} ppm</p>
-          <span className={`status ${getGasStatus().toLowerCase()}`}>● {getGasStatus()}</span>
-        </div>
-
-        <div className="metric-card normal">
-          <div className="metric-icon">🌡️</div>
-          <h3>Temperature</h3>
-          <p className="metric-value">{metrics.temp.toFixed(1)}°C</p>
-          <span className="status normal">● Normal</span>
+        <div className="settings-group">
+          <h3>Exhaust Fan & Regulator</h3>
+          <button className={`control-btn ${fanOn ? 'active' : ''}`} onClick={toggleFan}>
+            {fanOn ? 'Power ON' : 'Power OFF'}
+          </button>
+          <label>Regulator: {regulator}%</label>
+          <input className="slider" type="range" min="0" max="100" value={regulator} onChange={(e) => setRegulator(Number(e.target.value))} />
+          <p className="text-muted">Automation: {automationTriggered ? '✅ Active - Auto response running' : '⏸️ Standby'}</p>
         </div>
       </div>
 
-      <div className="controls-section">
-        <h3>Controls</h3>
-        <div className="control-button-group">
-          <button 
-            className={`control-btn ${fanOn ? 'active' : ''}`}
-            onClick={handleFanToggle}
-          >
-            {fanOn ? '✓ Fan ON' : '○ Fan OFF'}
-          </button>
-          <button 
-            className={`control-btn ${alarmOn ? 'active warning' : ''}`}
-            onClick={handleAlarmToggle}
-          >
-            {alarmOn ? '✓ Alarm ON' : '○ Alarm OFF'}
-          </button>
-        </div>
-      </div>
-
-      <div className="info-box">
-        <p>💡 <strong>Tip:</strong> System automatically activates fan when gas level exceeds 50 ppm.</p>
+      <div className="settings-group">
+        <h3>Threshold Setter</h3>
+        <label>Gas Threshold: {gasThreshold} ppm</label>
+        <input className="slider" type="range" min="30" max="100" value={gasThreshold} onChange={(e) => setGasThreshold(Number(e.target.value))} />
+        <label>Temperature Threshold: {tempThreshold}°C</label>
+        <input className="slider" type="range" min="40" max="90" value={tempThreshold} onChange={(e) => setTempThreshold(Number(e.target.value))} />
+        <button onClick={applyAiThresholds} className="btn-primary">Apply AI Seasonal Thresholds</button>
       </div>
     </div>
   )
