@@ -105,13 +105,13 @@ function App() {
             className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`}
             onClick={() => setCurrentPage('dashboard')}
           >
-            📊 Home
+            📱 Monitor
           </button>
           <button 
             className={`nav-btn ${currentPage === 'control' ? 'active' : ''}`}
             onClick={() => setCurrentPage('control')}
           >
-            🎮 Control
+            🎛️ Control
           </button>
           <button 
             className={`nav-btn ${currentPage === 'alerts' ? 'active' : ''}`}
